@@ -14,7 +14,7 @@
 """
 from framer import Framer
 from bitops import get_bits
-from eth_fr import UDFrame_Z_ADCU30_204
+from __init__ import UDFrame_Z_ADCU30_204
 import binascii
 
 # 您在 pcap 中观察到的原始 payload（31 bytes，hex）

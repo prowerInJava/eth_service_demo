@@ -12,7 +12,7 @@ import time
 
 from transport_udp import UDPTransport
 from eth_comm import EthECUCommunicator
-from eth_fr import UDFrame_Z_ADCU30_204
+from __init__ import UDFrame_Z_ADCU30_204
 from framer import Framer
 
 def on_receive(parsed_signals, raw):

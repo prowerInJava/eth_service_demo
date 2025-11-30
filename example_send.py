@@ -27,7 +27,7 @@ import argparse
 from transport_afpacket import AFPacketTransport
 from framer import Framer
 from eth_comm import EthECUCommunicator
-from eth_fr import UDFrame_Z_ADCU30_204
+from __init__ import UDFrame_Z_ADCU30_204
 
 def send_using_comm(iface, dst_mac, ethertype):
     # 创建 AF_PACKET transport

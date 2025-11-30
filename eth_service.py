@@ -22,14 +22,10 @@ from typing import Callable, Optional, Tuple, Dict, Any
 import threading
 import time
 
-# 导入帧定义（兼容 eth_fr.py 或 frames.py）
 try:
-    from eth_fr import UDFrame_Z_ADCU30_204
-except Exception:
-    try:
-        from frames import UDFrame_Z_ADCU30_204
-    except Exception:
-        UDFrame_Z_ADCU30_204 = None
+    from __init__ import UDFrame_Z_ADCU30_204
+except ImportError:
+    UDFrame_Z_ADCU30_204 = None
 
 from framer import Framer
 from eth_comm import EthECUCommunicator
