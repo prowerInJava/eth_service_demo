@@ -48,7 +48,7 @@ class EthECUCommunicator:
                 continue
             name = getattr(sig_cls, 'sig_name')
             startbit = getattr(sig_cls, 'sig_start_bit', None) or getattr(sig_cls, 'startbit', None)
-            length = getattr(sig_cls, 'sig_length', None) or getattr(sig_cls, 'lenght', None)
+            length = getattr(sig_cls, 'sig_length', None) or getattr(sig_cls, 'length', None)
             byteorder = getattr(sig_cls, 'sig_byteorder', "Intel")
             if startbit is None or length is None:
                 continue
@@ -98,7 +98,7 @@ class EthECUCommunicator:
                 if name not in sig_defs:
                     continue
                 sig_c = sig_defs[name]
-                length = getattr(sig_c, 'sig_length', getattr(sig_c, 'lenght', None))
+                length = getattr(sig_c, 'sig_length', getattr(sig_c, 'length', None))
                 startbit = getattr(sig_c, 'sig_start_bit', getattr(sig_c, 'startbit', None))
                 if length is None or startbit is None:
                     continue
@@ -116,21 +116,21 @@ class EthECUCommunicator:
             if counter_name and counter_name in sig_defs:
                 cdef = sig_defs[counter_name]
                 cstart = getattr(cdef, 'sig_start_bit', getattr(cdef, 'startbit', None))
-                clength = getattr(cdef, 'sig_length', getattr(cdef, 'lenght', None))
+                clength = getattr(cdef, 'sig_length', getattr(cdef, 'length', None))
                 cbyteorder = getattr(cdef, 'sig_byteorder', "Intel")
                 if cstart is not None and clength is not None:
                     set_bits(self.payload, cstart, clength, cnt, byteorder=cbyteorder)
             if dataid_field_name and dataid_field_name in sig_defs:
                 ddef = sig_defs[dataid_field_name]
                 dstart = getattr(ddef, 'sig_start_bit', getattr(ddef, 'startbit', None))
-                dlength = getattr(ddef, 'sig_length', getattr(ddef, 'lenght', None))
+                dlength = getattr(ddef, 'sig_length', getattr(ddef, 'length', None))
                 dbyteorder = getattr(ddef, 'sig_byteorder', "Intel")
                 if dstart is not None and dlength is not None:
                     set_bits(self.payload, dstart, dlength, dataid & ((1 << dlength) - 1), byteorder=dbyteorder)
             if checksum_name and checksum_name in sig_defs:
                 chk = sig_defs[checksum_name]
                 chkstart = getattr(chk, 'sig_start_bit', getattr(chk, 'startbit', None))
-                chklength = getattr(chk, 'sig_length', getattr(chk, 'lenght', None))
+                chklength = getattr(chk, 'sig_length', getattr(chk, 'length', None))
                 chkbyteorder = getattr(chk, 'sig_byteorder', "Intel")
                 if chkstart is not None and chklength is not None:
                     set_bits(self.payload, chkstart, chklength, crc & ((1 << chklength) - 1), byteorder=chkbyteorder)
@@ -172,7 +172,7 @@ class EthECUCommunicator:
                     continue
                 name = getattr(sig_cls, 'sig_name')
                 startbit = getattr(sig_cls, 'sig_start_bit', getattr(sig_cls, 'startbit', None))
-                length = getattr(sig_cls, 'sig_length', getattr(sig_cls, 'lenght', None))
+                length = getattr(sig_cls, 'sig_length', getattr(sig_cls, 'length', None))
                 byteorder = getattr(sig_cls, 'sig_byteorder', "Intel")
                 if startbit is None or length is None:
                     continue

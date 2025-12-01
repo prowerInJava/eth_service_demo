@@ -17,8 +17,46 @@ from bitops import get_bits
 from __init__ import UDFrame_Z_ADCU30_204
 import binascii
 
+"""
+msg_id: 0x94, payload_len: 23 bytes
+payload (hex): 3b720100c41e8101000004d20000000000000000000000
+CrsCtrlOvrdnChk8: startbit=40, len=8, byteorder=Intel -> 30
+CrsCtrlOvrdnCntr4: startbit=48, len=4, byteorder=Intel -> 1
+CrsCtrlOvrdnDataID4: startbit=52, len=4, byteorder=Intel -> 8
+CrsCtrlOvrdnReq: startbit=56, len=1, byteorder=Intel -> 1
+LVPwrSplyErrStsChk8: startbit=0, len=8, byteorder=Intel -> 59
+LVPwrSplyErrStsCntr4: startbit=8, len=4, byteorder=Intel -> 2
+LVPwrSplyErrStsDataID4: startbit=12, len=4, byteorder=Intel -> 7
+LVPwrSplyErrStsSts: startbit=16, len=16, byteorder=Intel -> 1
+FltElecDcDc: startbit=36, len=1, byteorder=Motorola -> 0
+
+msg_id: 0x94, payload_len: 23 bytes
+000000940000001773740100c4868301000004d20000000000000000000000
+CrsCtrlOvrdnChk8: startbit=40, len=8, byteorder=Intel -> 134
+CrsCtrlOvrdnCntr4: startbit=48, len=4, byteorder=Intel -> 3
+CrsCtrlOvrdnDataID4: startbit=52, len=4, byteorder=Intel -> 8
+CrsCtrlOvrdnReq: startbit=56, len=1, byteorder=Intel -> 1
+LVPwrSplyErrStsChk8: startbit=0, len=8, byteorder=Intel -> 115
+LVPwrSplyErrStsCntr4: startbit=8, len=4, byteorder=Intel -> 4
+LVPwrSplyErrStsDataID4: startbit=12, len=4, byteorder=Intel -> 7
+LVPwrSplyErrStsSts: startbit=16, len=16, byteorder=Intel -> 1
+FltElecDcDc: startbit=36, len=1, byteorder=Motorola -> 0
+
+msg_id: 0x94, payload_len: 23 bytes
+payload (hex): 88760100c4338501000004d20000000000000000000000
+CrsCtrlOvrdnChk8: startbit=40, len=8, byteorder=Intel -> 51
+CrsCtrlOvrdnCntr4: startbit=48, len=4, byteorder=Intel -> 5
+CrsCtrlOvrdnDataID4: startbit=52, len=4, byteorder=Intel -> 8
+CrsCtrlOvrdnReq: startbit=56, len=1, byteorder=Intel -> 1
+LVPwrSplyErrStsChk8: startbit=0, len=8, byteorder=Intel -> 136
+LVPwrSplyErrStsCntr4: startbit=8, len=4, byteorder=Intel -> 6
+LVPwrSplyErrStsDataID4: startbit=12, len=4, byteorder=Intel -> 7
+LVPwrSplyErrStsSts: startbit=16, len=16, byteorder=Intel -> 1
+FltElecDcDc: startbit=36, len=1, byteorder=Motorola -> 0
+"""
+
 # 您在 pcap 中观察到的原始 payload（31 bytes，hex）
-hex_frame = "000000940000001709770100c4e78601000004d20000000000000000000000"
+hex_frame = "000000940000001788760100c4338501000004d20000000000000000000000"
 frame_bytes = binascii.unhexlify(hex_frame)
 
 # 配置 Framer：根据您示例中的字节顺序使用 big-endian (00 00 00 94 -> msg_id = 0x94)
@@ -50,7 +88,9 @@ to_print = [
     "LVPwrSplyErrStsChk8",
     "LVPwrSplyErrStsCntr4",
     "LVPwrSplyErrStsDataID4",
-    "LVPwrSplyErrStsSts"
+    "LVPwrSplyErrStsSts",
+    'FltElecDcDc',
+    'MsgReqForRtrctrRvsbDrvr', 'MsgReqForRtrctrRvsbPass'
 ]
 
 for name in to_print:
@@ -58,7 +98,7 @@ for name in to_print:
     if not sig:
         continue
     startbit = getattr(sig, 'sig_start_bit', getattr(sig, 'startbit', None))
-    length = getattr(sig, 'sig_length', getattr(sig, 'lenght', None))
+    length = getattr(sig, 'sig_length', getattr(sig, 'length', None))
     byteorder = getattr(sig, 'sig_byteorder', "Intel")
     if startbit is None or length is None:
         continue
