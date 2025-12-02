@@ -14,7 +14,7 @@
 """
 from framer import Framer
 from bitops import get_bits
-from __init__ import UDFrame_Z_ADCU30_204
+from __init__ import UDFrame_Z_204
 import binascii
 
 """
@@ -67,7 +67,7 @@ print(f"msg_id: 0x{msg_id:02X}, payload_len: {len(payload)} bytes")
 print("payload (hex):", payload.hex())
 
 # 解析 payload 中的一些信号（使用 frames 中的定义）
-frame_def = UDFrame_Z_ADCU30_204
+frame_def = UDFrame_Z_204
 
 # 收集信号类 map，便于通过名字查找定义
 sig_defs = {}

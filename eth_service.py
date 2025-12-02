@@ -23,9 +23,9 @@ import threading
 import time
 
 try:
-    from __init__ import UDFrame_Z_ADCU30_204
+    from __init__ import UDFrame_Z_204
 except ImportError:
-    UDFrame_Z_ADCU30_204 = None
+    UDFrame_Z_204 = None
 
 from framer import Framer
 from eth_comm import EthECUCommunicator
@@ -61,9 +61,9 @@ class EthService:
                  id_endian: str = 'big',
                  len_endian: str = 'big'):
         if frame_cls is None:
-            if UDFrame_Z_ADCU30_204 is None:
-                raise ValueError("frame_cls 未提供，且默认 UDFrame_Z_ADCU30_204 无法导入，请传入 frame_cls 参数")
-            frame_cls = UDFrame_Z_ADCU30_204
+            if UDFrame_Z_204 is None:
+                raise ValueError("frame_cls 未提供，且默认 UDFrame_Z_204 无法导入，请传入 frame_cls 参数")
+            frame_cls = UDFrame_Z_204
         self.frame_cls = frame_cls
 
         self.transport_type = transport_type.lower()

@@ -12,7 +12,7 @@ import time
 
 from transport_udp import UDPTransport
 from eth_comm import EthECUCommunicator
-from __init__ import UDFrame_Z_ADCU30_204
+from __init__ import UDFrame_Z_204
 from framer import Framer
 
 def on_receive(parsed_signals, raw):
@@ -50,9 +50,9 @@ def main():
     framer = Framer(mode="custom_4_4", id_endian="big", len_endian="big")
 
     # 发送端使用 framer，这样发送的时候会在 payload 前附加 4+4 header
-    comm = EthECUCommunicator(UDFrame_Z_ADCU30_204, t_sender, framer=framer)
+    comm = EthECUCommunicator(UDFrame_Z_204, t_sender, framer=framer)
     # 接收端也需要使用相同的 framer（用于 strip_header），否则接收到的数据会包含 header，解析会错位
-    comm_receiver = EthECUCommunicator(UDFrame_Z_ADCU30_204, t_receiver, framer=framer)
+    comm_receiver = EthECUCommunicator(UDFrame_Z_204, t_receiver, framer=framer)
     comm_receiver.register_on_receive(on_receive)
     comm_receiver.start_receiving()
 
@@ -65,7 +65,6 @@ def main():
         send_one_via_comm_and_print(comm, framer)
         print("Sent frame", i)
         time.sleep(0.2)
-
     # 保持接收端存活演示
     time.sleep(1.0)
     t_sender.stop()

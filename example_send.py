@@ -27,7 +27,7 @@ import argparse
 from transport_afpacket import AFPacketTransport
 from framer import Framer
 from eth_comm import EthECUCommunicator
-from __init__ import UDFrame_Z_ADCU30_204
+from __init__ import UDFrame_Z_204
 
 def send_using_comm(iface, dst_mac, ethertype):
     # 创建 AF_PACKET transport
@@ -36,7 +36,7 @@ def send_using_comm(iface, dst_mac, ethertype):
     framer = Framer(mode="custom_4_4", id_endian="big", len_endian="big")
 
     # 将 framer 注入 communicator（send() 会自动 add_header）
-    comm = EthECUCommunicator(UDFrame_Z_ADCU30_204, transport, framer=framer)
+    comm = EthECUCommunicator(UDFrame_Z_204, transport, framer=framer)
 
     # 示例：设置信号（使用信号名），然后发送多帧
     comm.set_signal('CrsCtrlOvrdnReq', 1)
@@ -75,7 +75,7 @@ def send_raw_sample(iface, dst_mac, ethertype, sample_hex=None):
         # 这里用上面您提供的 PCAP 中的 payload 部分（去掉前 8 字节 header）作为示例：
         example_payload_hex = "0100c4e78601000004d20000000000000000000000"  # 23 bytes from your sample after header
         payload = binascii.unhexlify(example_payload_hex)
-        framed = framer.add_header(payload, msg_id=getattr(UDFrame_Z_ADCU30_204, 'msg_id', 0x94))
+        framed = framer.add_header(payload, msg_id=getattr(UDFrame_Z_204, 'msg_id', 0x94))
         print("发送封装后的帧（framer.add_header -> 4+4+23）...")
         transport.send(framed)
         print("已发送 framed payload")

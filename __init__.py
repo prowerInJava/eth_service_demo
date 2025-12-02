@@ -4,23 +4,251 @@
 # @Email: jackhuan@icloud.com
 # @File: __init__.py.py
 
-__all__ = ['UDFrame_Z_ADCU30_204']
+__all__ = ['UDFrame_Z_204']
 
-class UDFrame_Z_ADCU30_204:
-    msg_name = "EthernetSignal_Z_ADCU30_10ms"
+class UDFrame_Z_204:
+    msg_name = "EthernetSignal_Z_10ms"
     msg_id = 0x94
     msg_type = "Unicast"
     msg_tx_method = 'cyclic'
     msg_cycle = 0.01
     msg_length = 23
     tx_node = "Z"
-    rx_node = "ADCU30"
+    rx_node = "adcu"
     sig_group_dict = {
-        'CrsCtrlOvrdn':["CrsCtrlOvrdnChk8","CrsCtrlOvrdnCntr4", "CrsCtrlOvrdnDataID4", "CrsCtrlOvrdnReq"],
-        'LVPwrSplyErrSts':["LVPwrSplyErrStsChk8","LVPwrSplyErrStsCntr4","LVPwrSplyErrStsDataID4", "LVPwrSplyErrStsSts"],
-        'VehLVSysUZCL':["VehLVSysUZCLVehLVSysUBkp","VehLVSysUZCLVehLVSysUMai"]
+        'CrsCtrlOvrdn':['CrsCtrlOvrdn_UB', "CrsCtrlOvrdnChk8","CrsCtrlOvrdnCntr4", "CrsCtrlOvrdnDataID4", "CrsCtrlOvrdnReq"],
+        'LVPwrSplyErrSts':["LVPwrSplyErrSts_UB", "LVPwrSplyErrStsChk8", "LVPwrSplyErrStsCntr4", "LVPwrSplyErrStsDataID4", "LVPwrSplyErrStsSts"],
+        'VehLVSysUZCL':["VehLVSysUZCL_UB", "VehLVSysUZCLVehLVSysUBkp", "VehLVSysUZCLVehLVSysUMai"]
     }
     sig_group_dataid_dict = {'CrsCtrlOvrdn':0x8C2,"LVPwrSplyErrSts":0x7A4, "VehLVSysUZCL":None}
+
+    e2e_profile_dict = {
+        "CrsCtrlOvrdn": "PROFILE_11",
+        "LVPwrSplyErrSts": "PROFILE_11",
+        "VehLVSysUZCL": None
+    }
+
+    # ---------- 信号组 UB ----------
+    class CrsCtrlOvrdn_UB:
+        sig_name = "CrsCtrlOvrdn_UB"
+        sig_start_bit = 38
+        update_id_bit = 38
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 38
+        byte = 4
+        mask = 0b01000000
+        unmask = 0b10111111
+        shift = 6
+        description = "Update-bit for CrsCtrlOvrdn group"
+
+    class LVPwrSplyErrSts_UB:
+        sig_name = "LVPwrSplyErrSts_UB"
+        sig_start_bit = 39
+        update_id_bit = 39
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 39
+        byte = 4
+        mask = 0b10000000
+        unmask = 0b01111111
+        shift = 7
+        description = "Update-bit for LVPwrSplyErrSts group"
+
+    class VehLVSysUZCL_UB:
+        sig_name = "VehLVSysUZCL_UB"
+        sig_start_bit = 163
+        update_id_bit = 163
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 163
+        byte = 12
+        mask = 0b00000001
+        unmask = 0b11111110
+        shift = 0
+        description = "Update-bit for VehLVSysUZCL group"
+
+    # ---------- 普通信号 UB ----------
+    class FltElecDcDc_UB:
+        sig_name = "FltElecDcDc_UB"
+        sig_start_bit = 35
+        update_id_bit = 35
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 35
+        byte = 4
+        mask = 0b00001000
+        unmask = 0b11110111
+        shift = 3
+        description = "Update-bit for FltElecDcDc"
+
+    class MsgReqForRtrctrRvsbDrvr_UB:
+        sig_name = "MsgReqForRtrctrRvsbDrvr_UB"
+        sig_start_bit = 32
+        update_id_bit = 32
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 32
+        byte = 4
+        mask = 0b00000001
+        unmask = 0b11111110
+        shift = 0
+        description = "Update-bit for MsgReqForRtrctrRvsbDrvr"
+
+    class MsgReqForRtrctrRvsbPass_UB:
+        sig_name = "MsgReqForRtrctrRvsbPass_UB"
+        sig_start_bit = 122
+        update_id_bit = 122
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 122
+        byte = 7
+        mask = 0b01000000
+        unmask = 0b10111111
+        shift = 6
+        description = "Update-bit for MsgReqForRtrctrRvsbPass"
+
+    class PrpsnADResvSigGrp_UB:
+        sig_name = "PrpsnADResvSigGrp_UB"
+        sig_start_bit = 34
+        update_id_bit = 34
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 34
+        byte = 4
+        mask = 0b00000100
+        unmask = 0b11111011
+        shift = 2
+        description = "Update-bit for PrpsnADResvSigGrp"
+
+    class PrpsnVDResvSigGrp_UB:
+        sig_name = "PrpsnVDResvSigGrp_UB"
+        sig_start_bit = 37
+        update_id_bit = 37
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 37
+        byte = 4
+        mask = 0b00100000
+        unmask = 0b11011111
+        shift = 5
+        description = "Update-bit for PrpsnVDResvSigGrp"
+
+    class VehLVSysUZCLVehLVSysUBkp_UB:
+        sig_name = "VehLVSysUZCLVehLVSysUBkp_UB"
+        sig_start_bit = 163
+        update_id_bit = 163
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 163
+        byte = 12
+        mask = 0b00000001
+        unmask = 0b11111110
+        shift = 0
+        description = "Update-bit for VehLVSysUZCLVehLVSysUBkp"
+
+    class VehLVSysUZCLVehLVSysUMai_UB:
+        sig_name = "VehLVSysUZCLVehLVSysUMai_UB"
+        sig_start_bit = 163
+        update_id_bit = 163
+        sig_length = 1
+        sig_value_factor = 1
+        sig_value_offset = 0
+        sig_value_min = 0
+        sig_value_max = 1
+        sig_byteorder = "Intel"
+        sig_value_init = 0
+        sig_value_type = "IDENTICAL"
+        sig_value_table = "OnOff1"
+        compute_method = None
+        length = 1
+        startbit = 163
+        byte = 12
+        mask = 0b00000001
+        unmask = 0b11111110
+        shift = 0
+        description = "Update-bit for VehLVSysUZCLVehLVSysUMai"
 
     class CrsCtrlOvrdnChk8:
         sig_name = "CrsCtrlOvrdnChk8"
