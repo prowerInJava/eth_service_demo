@@ -312,7 +312,7 @@ class UDFrame_Z_204:
         startbit = 52
         byte = 6
         mask = 0xF0
-        unmask = 0xFFFFFFFFFFFFFF0F
+        unmask = 0x0F
         shift = 4
         description = "Dataid4 for CrsCtrlOvrdn"
 
@@ -332,10 +332,10 @@ class UDFrame_Z_204:
         compute_method = None
         length = 1
         startbit = 56
-        byte = 7
-        mask = 0b00000001
-        unmask = 0b11111110
-        shift = 0
+        byte = 7  # 56 // 8 = 7
+        shift = 0  # 56 % 8 = 0
+        mask = 0x01  # ((1 << 1) - 1) << 0 = 1
+        unmask = 0xFE  # ~1 & 0xFF = 0xFE
         description = "Override CC/ACC with accelerator pedal"
 
     class FltElecDcDc:
@@ -355,8 +355,8 @@ class UDFrame_Z_204:
         length = 1
         startbit = 36
         byte = 4
-        mask = 0b00010000
-        unmask = 0b11101111
+        mask = 0x10  # ((1 << 1) - 1) << 4 = 0x10
+        unmask = 0xEF
         shift = 4
         description = "The fault of DC relevant tp temperature"
 
@@ -486,10 +486,10 @@ class UDFrame_Z_204:
         compute_method = None
         length = 1
         startbit = 123
-        byte = 15
-        mask = 0b10000000
-        unmask = 0b01111111
-        shift = 7
+        byte = 15  # 123 // 8 = 15
+        shift = 3  # 123 % 8 = 3
+        mask = 0x08  # ((1 << 1) - 1) << 3 = 0x08
+        unmask = 0xF7  # ~0x08 & 0xFF = 0xF7
         description = "Request to show message in DIM indicating that is a fault with the RMP"
 
     class PrpsnADResvSigGrp:
@@ -528,7 +528,7 @@ class UDFrame_Z_204:
         sig_value_type = "IDENTICAL"
         sig_value_table = ""
         compute_method = None
-        length = 17
+        length = 16
         startbit = 71
         byte = 8
         mask = 0xFFFF
