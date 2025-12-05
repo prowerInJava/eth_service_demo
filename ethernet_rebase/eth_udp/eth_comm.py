@@ -13,9 +13,9 @@ eth_comm.py（带可选 framer 支持）
 - start_receiving 的回调会在解析之前调用 framer.strip_header(raw)（若配置了 framer），并把剥离后的 payload 用于信号解析。
 """
 from typing import Callable, Dict, Any, List, Optional
-from bitops import set_bits, get_bits
-import e2e
-from framer import Framer  # 引入 Framer（如果没有使用 framer，可传入 None）
+from ..signal_ops.bitops import set_bits, get_bits
+from ..signal_ops import e2e
+from ..signal_ops.framer import Framer  # 引入 Framer（如果没有使用 framer，可传入 None）
 
 class EthECUCommunicator:
     def __init__(self, frame_cls, transport, framer: Optional[Framer] = None):
