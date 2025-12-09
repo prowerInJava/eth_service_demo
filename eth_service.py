@@ -28,7 +28,7 @@ except ImportError:
     UDFrame_Z_204 = None
 
 from framer import Framer
-from eth_comm import EthECUCommunicator
+from eth_comm2 import EthECUCommunicator
 
 # transport 实现
 from transport_udp import UDPTransport
@@ -102,6 +102,35 @@ class EthService:
             self.transport_recv = UDPTransport(local_addr=udp_remote, remote_addr=udp_local)
             # 创建发送/接收的 communicator（发送使用 transport_send，接收使用 transport_recv）
             self.comm_send = EthECUCommunicator(self.frame_cls, self.transport_send, framer=self.framer)
+            # 初始化发送端的 group counters，使得下一次发送产生 cnt == 0（即 saved == mask）
+            try:
+                sig_defs = {}
+                for attr in dir(self.frame_cls):
+                    if attr.startswith('__'):
+                        continue
+                    sig_c = getattr(self.frame_cls, attr)
+                    if not hasattr(sig_c, 'sig_name'):
+                        continue
+                    sig_defs[getattr(sig_c, 'sig_name')] = sig_c
+
+                for gname, members in getattr(self.frame_cls, 'sig_group_dict', {}).items():
+                    # 找到计数器字段确定宽度
+                    counter_name = next((m for m in members if 'Cntr' in m), None)
+                    if counter_name and counter_name in sig_defs:
+                        cdef = sig_defs[counter_name]
+                        clength = getattr(cdef, 'sig_length', getattr(cdef, 'length', None))
+                        if clength:
+                            mask = (1 << int(clength)) - 1
+                        else:
+                            mask = 0x0F
+                    else:
+                        mask = 0x0F
+                    # 将发送端 communicator 的保存计数器设为 mask，使得下一次计算 cnt = (mask + 1) & mask == 0
+                    if self.comm_send:
+                        self.comm_send._group_counters[gname] = mask
+            except Exception:
+                # 保守处理：不要因为这里的初始化失败而阻止服务启动
+                pass
             # 接收端也需要同样的 framer 来 strip header（若 framer 为 None，则解析整个 payload）
             self.comm_recv = EthECUCommunicator(self.frame_cls, self.transport_recv, framer=self.framer)
         else:
@@ -236,7 +265,9 @@ if __name__ == '__main__':
     svc.start()
 
     svc.set_signal('CrsCtrlOvrdnReq', 1)
-    svc.set_signal('LVPwrSplyErrStsSts', 0x1234)
+    svc.set_signal('CrsCtrlOvrdn_UB', 1)
+    svc.set_signal('MsgReqForRtrctrRvsbDrvr', 1)
+    svc.set_signal('PrpsnVDResvSigGrp', 128)
 
     for i in range(4):
         b = svc.send_and_return_bytes()
@@ -244,9 +275,27 @@ if __name__ == '__main__':
         time.sleep(0.2)
 
     # 直接发送 pcap 中的完整帧示例
-    sample_hex = "00000094000000170100c4e78601000004d20000000000000000000000"
-    svc.send_raw_frame(bytes.fromhex(sample_hex))
+    # sample_hex = "00000094000000170100c4e78601000004d20000000000000000000000"
+    # svc.send_raw_frame(bytes.fromhex(sample_hex))
 
     time.sleep(1.0)
     svc.stop()
-    print("服务已停止")
+    print("服务已停止")  # 0000000040528001000000000000000000000000000000
+
+playload_list = [
+                0x00000094000000170000000040528001000000000000000000000000000000,
+                0x000000940000001700000000401e8101000000000000000000000000000000,
+                0x00000094000000170000000040ca8201000000000000000000000000000000,
+                0x00000094000000170000000040868301000000000000000000000000000000,
+                0x000000940000001700000000407f8401000000000000000000000000000000,
+                0x00000094000000170000000040338501000000000000000000000000000000,
+                0x00000094000000170000000040e78601000000000000000000000000000000,
+                0x00000094000000170000000040ab8701000000000000000000000000000000,
+                0x00000094000000170000000040088801000000000000000000000000000000,
+                0x00000094000000170000000040448901000000000000000000000000000000,
+                0x00000094000000170000000040908a01000000000000000000000000000000,
+                0x00000094000000170000000040dc8b01000000000000000000000000000000,
+                0x00000094000000170000000040258c01000000000000000000000000000000,
+                0x00000094000000170000000040698d01000000000000000000000000000000,
+                0x00000094000000170000000040bd8e01000000000000000000000000000000]
+# 这一组playload 才是有效的，0000009400000017 是 long head id 和 byte length，

@@ -223,7 +223,8 @@ class EthECUCommunicator:
                 dbyteorder = getattr(ddef, 'sig_byteorder', "Intel")
                 if dstart is not None and dlength is not None:
                     # Truncate DataID to field length
-                    val_to_write = dataid & ((1 << dlength) - 1)
+                    # val_to_write = dataid & ((1 << dlength) - 1)
+                    val_to_write = (dataid & 0x0F00) >> 8  # 取dataid的高4位
                     set_bits(self.payload, dstart, dlength, val_to_write, byteorder=dbyteorder)
 
             if checksum_name and checksum_name in sig_defs:

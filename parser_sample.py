@@ -56,7 +56,7 @@ FltElecDcDc: startbit=36, len=1, byteorder=Motorola -> 0
 """
 
 # 您在 pcap 中观察到的原始 payload（31 bytes，hex）
-hex_frame = "000000940000001788760100c4338501000004d20000000000000000000000"
+hex_frame = "00000094000000170000000040528001000000000000000000000000000000"
 frame_bytes = binascii.unhexlify(hex_frame)
 
 # 配置 Framer：根据您示例中的字节顺序使用 big-endian (00 00 00 94 -> msg_id = 0x94)
@@ -93,7 +93,7 @@ to_print = [
     'MsgReqForRtrctrRvsbDrvr', 'MsgReqForRtrctrRvsbPass'
 ]
 
-for name in to_print:
+for name in sig_defs.keys():
     sig = sig_defs.get(name)
     if not sig:
         continue
