@@ -52,62 +52,15 @@ def get_crc_countdata(data_id: int, counter: int, sig_value_length: List[Tuple[i
         crc_data += int(value).to_bytes(nbytes, 'little', signed=False)
     return list(crc_data)
 
-def profile11_crc8_(data_id, data: List[int]) -> int:
+def profile11_crc8(data_id, data: List[int]) -> int:
     """
     历史兼容的辅助函数。保持原有行为：
     profile11_crc8(data_id, data) == crc8([data_id & 0xFF, 0x00] + data)
     """
     return crc8([data_id & 0xFF, 0x00] + list(data))
 
-
-def profile11_crc8(data_id: int, counter: int, user_data: List[int]) -> int:
-    """
-    计算 AUTOSAR E2E Profile 11 的 CRC8。
-    :param data_id: Data ID (e.g., 0x8C2)
-    :param counter: 4-bit counter (0-15)
-    :param user_data: List of protected signal bytes
-    :return: 8-bit CRC
-    """
-    data_id_low = data_id & 0xFF
-    combined_byte = ((counter & 0x0F) << 4) | (data_id_low & 0x0F)
-    full_input = [data_id_low, 0x00, combined_byte] + list(user_data)
-    return crc8(full_input, start_value=0x00, xor_value=0x00, div=0x1D, Crc_IsFirstCall=True)
-
-
-def profile11_crc8_standard(data_id: int, counter: int, user_data: List[int]) -> int:
-    """
-    严格按照 AUTOSAR E2E Profile 11 分步计算 CRC。
-    """
-    data_id_low = data_id & 0xFF
-
-    # Step 1: CRC(DataID_Low)
-    crc1 = crc8(
-        data=[data_id_low],
-        start_value=0xFF,
-        xor_value=0xFF,
-        div=0x1D,
-        Crc_IsFirstCall=False
-    )  # 注意: 实际初始值 = 0xFF ^ 0xFF = 0x00
-
-    # Step 2: CRC(0x00)
-    crc2 = crc8(
-        data=[0x00],
-        start_value=crc1,
-        xor_value=0xFF,
-        div=0x1D,
-        Crc_IsFirstCall=False
-    )
-
-    # Step 3: CRC(combined_byte + user_data)
-    combined_byte = ((counter & 0x0F) << 4) | (data_id_low & 0x0F)
-    crc3 = crc8(
-        data=[combined_byte] + user_data,
-        start_value=crc2,
-        xor_value=0xFF,
-        div=0x1D,
-        Crc_IsFirstCall=False
-    )
-
-    # Step 4: Final XOR with 0xFF
-    final_crc = crc3 ^ 0xFF
-    return final_crc & 0xFF
+if __name__ == '__main__':
+    dataid = 0x8C2
+    # 0x00 AUTOSAR 标准明确定义，是 Profile 11 CRC 输入的固定组成部分
+    # [DataID_low, 0x00] + [Protected Data]
+    print(hex(profile11_crc8(0x8C2,[0x81, 0x01])))

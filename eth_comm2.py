@@ -97,12 +97,12 @@ class EthECUCommunicator:
                 val = maxv
             set_bits(self.payload, startbit, length, val, byteorder=byteorder)
 
-    def _apply_e2e_for_groups(self):
+    def _apply_e2e_for_groups_bak(self):
         groups = getattr(self.frame, 'sig_group_dict', {})
         dataids = getattr(self.frame, 'sig_group_dataid_dict', {})
         profiles = getattr(self.frame, 'e2e_profile_dict', {})
 
-        # Build sig_defs map
+        # Build sig_defs map once
         sig_defs = {}
         for attr in dir(self.frame):
             if attr.startswith('__'):
@@ -117,70 +117,151 @@ class EthECUCommunicator:
             if dataid is None or profile is None:
                 continue
 
-            # Parse group members
-            counter_name = None
-            checksum_name = None
-            dataid_field_name = None
-            other_members = []
-            for m in members:
-                if 'Cntr' in m:
-                    counter_name = m
-                elif 'Chk' in m:
-                    checksum_name = m
-                elif 'DataID' in m:
-                    dataid_field_name = m
-                else:
-                    other_members.append(m)
-
             if profile == 'PROFILE_11':
-                # --- Counter: 当前值（第一帧为 0），下次递增 ---
+                # 1. 获取当前 counter 并递增
                 cnt = self._group_counters[gname]
-                self._group_counters[gname] = (cnt + 1) & 0x0F  # 4-bit 循环
+                self._group_counters[gname] = (cnt + 1) & 0x0F
 
-                # --- 收集用户信号字节（little-endian）---
-                user_data_bytes = bytearray()
-                for name in other_members:
-                    if name not in sig_defs:
-                        continue
-                    sig_c = sig_defs[name]
-                    length = getattr(sig_c, 'sig_length', getattr(sig_c, 'length', None))
-                    if length is None:
-                        continue
-                    val = self._signal_values.get(name, getattr(sig_c, 'sig_value_init', 0))
-                    nbytes = (length + 7) // 8
-                    user_data_bytes.extend(int(val).to_bytes(nbytes, 'little'))
+                # 2. 提取组内各信号的 raw 值（从 self._signal_values 或默认值）
+                def get_raw(sig_name):
+                    return self._signal_values.get(sig_name, 0)
 
-                # --- 计算 CRC（使用修正后的 e2e.profile11_crc8）---
-                crc = e2e.profile11_crc8(dataid, cnt, list(user_data_bytes))
+                # 3. 构造 protected data 字节（必须按 Profile 11 要求）
+                #    byte0 = [DataID4 (4b) | Counter (4b)]
+                #    byte1 = [Req (1b) | 0...0 (7b)]
+                dataid_high_nibble = (dataid >> 8) & 0x0F  # e.g., 0x8C2 → 0x8
+                byte0 = ((dataid_high_nibble & 0x0F) << 4) | (cnt & 0x0F)
 
-                # --- 写入 Counter ---
+                # 找到 Req 信号名（通常以 "Req" 结尾）
+                req_sig_name = None
+                for m in members:
+                    if 'Req' in m:
+                        req_sig_name = m
+                        break
+                req_val = get_raw(req_sig_name) if req_sig_name else 0
+                byte1 = req_val & 0xFF  # 即使只有 1 位，也作为完整字节
+
+                protected_data = [byte0, byte1]
+
+                # 4. 计算 CRC
+                crc_value = e2e.profile11_crc8(dataid, protected_data)
+
+                # 5. 将 counter、dataid4、crc 写入 payload
+                #    - 先 pack signals（包括 counter/dataid4）
+                #    - 再覆写 CRC
+                # 这里我们直接写入，因为 _pack_signals 已设置其他信号
+
+                # 写 Counter
+                counter_name = next((m for m in members if 'Cntr' in m), None)
                 if counter_name and counter_name in sig_defs:
                     cdef = sig_defs[counter_name]
-                    cstart = getattr(cdef, 'sig_start_bit', getattr(cdef, 'startbit', None))
-                    clength = getattr(cdef, 'sig_length', getattr(cdef, 'length', None))
-                    cbyteorder = getattr(cdef, 'sig_byteorder', "Intel")
-                    if cstart is not None and clength is not None:
-                        set_bits(self.payload, cstart, clength, cnt, byteorder=cbyteorder)
+                    startbit = getattr(cdef, 'startbit', getattr(cdef, 'sig_start_bit', 0))
+                    length = getattr(cdef, 'length', getattr(cdef, 'sig_length', 4))
+                    byteorder = getattr(cdef, 'sig_byteorder', "Intel")
+                    set_bits(self.payload, startbit, length, cnt, byteorder=byteorder)
 
-                # --- 写入 DataID 字段（OEM 定制：高字节低4位）---
-                if dataid_field_name and dataid_field_name in sig_defs:
-                    ddef = sig_defs[dataid_field_name]
-                    dstart = getattr(ddef, 'sig_start_bit', getattr(ddef, 'startbit', None))
-                    dlength = getattr(ddef, 'sig_length', getattr(ddef, 'length', None))
-                    dbyteorder = getattr(ddef, 'sig_byteorder', "Intel")
-                    if dstart is not None and dlength is not None:
-                        val_to_write = (dataid & 0x0F00) >> 8
-                        set_bits(self.payload, dstart, dlength, val_to_write, byteorder=dbyteorder)
+                # 写 DataID4
+                dataid_name = next((m for m in members if 'DataID' in m), None)
+                if dataid_name and dataid_name in sig_defs:
+                    ddef = sig_defs[dataid_name]
+                    startbit = getattr(ddef, 'startbit', 0)
+                    length = getattr(ddef, 'length', 4)
+                    byteorder = getattr(ddef, 'sig_byteorder', "Intel")
+                    set_bits(self.payload, startbit, length, dataid_high_nibble, byteorder=byteorder)
 
-                # --- 写入 Checksum ---
-                if checksum_name and checksum_name in sig_defs:
+                # 写 CRC
+                chk_name = next((m for m in members if 'Chk' in m), None)
+                if chk_name and chk_name in sig_defs:
+                    chkdef = sig_defs[chk_name]
+                    startbit = getattr(chkdef, 'startbit', 0)
+                    length = getattr(chkdef, 'length', 8)
+                    byteorder = getattr(chkdef, 'sig_byteorder', "Intel")
+                    set_bits(self.payload, startbit, length, crc_value, byteorder=byteorder)
+
+    def _apply_e2e_for_groups(self):
+        groups = getattr(self.frame, 'sig_group_dict', {})
+        dataids = getattr(self.frame, 'sig_group_dataid_dict', {})
+        profiles = getattr(self.frame, 'e2e_profile_dict', {})
+
+        sig_defs = {}
+        for attr in dir(self.frame):
+            if attr.startswith('__'):
+                continue
+            sig_cls = getattr(self.frame, attr)
+            if hasattr(sig_cls, 'sig_name'):
+                sig_defs[sig_cls.sig_name] = sig_cls
+
+        for gname, members in groups.items():
+            dataid = dataids.get(gname)
+            profile = profiles.get(gname)
+            if dataid is None or profile is None:
+                continue
+
+            if profile == 'PROFILE_11':
+                cnt = self._group_counters[gname]
+                self._group_counters[gname] = (cnt + 1) & 0x0F
+
+                counter_name = None
+                checksum_name = None
+                dataid_name = None
+                other_signals = []
+
+                # Classify members, skip _UB signals
+                for m in members:
+                    if m.endswith('_UB'):
+                        continue  # Update Bit is NOT part of protected data
+                    if 'Cntr' in m or 'Counter' in m:
+                        counter_name = m
+                    elif 'Chk' in m or 'Check' in m:
+                        checksum_name = m
+                    elif 'DataID' in m:
+                        dataid_name = m
+                    else:
+                        other_signals.append(m)
+
+                if not counter_name or not checksum_name:
+                    continue
+
+                # Build protected data
+                protected_data = []
+                dataid_high_nibble = (dataid >> 8) & 0x0F
+                first_byte = ((dataid_high_nibble & 0x0F) << 4) | (cnt & 0x0F)
+                protected_data.append(first_byte)
+
+                for sig_name in other_signals:
+                    if sig_name not in sig_defs:
+                        continue
+                    sig_def = sig_defs[sig_name]
+                    length = getattr(sig_def, 'length', getattr(sig_def, 'sig_length', 0))
+                    if length <= 0:
+                        continue
+                    raw_val = self._signal_values.get(sig_name, 0)
+                    num_bytes = (length + 7) // 8
+                    protected_data.extend(raw_val.to_bytes(num_bytes, 'little'))
+
+                crc_value = e2e.profile11_crc8(dataid, protected_data)
+
+                # Write back fields
+                if counter_name in sig_defs:
+                    cdef = sig_defs[counter_name]
+                    startbit = getattr(cdef, 'startbit', getattr(cdef, 'sig_start_bit', 0))
+                    length = getattr(cdef, 'length', getattr(cdef, 'sig_length', 4))
+                    byteorder = getattr(cdef, 'sig_byteorder', "Intel")
+                    set_bits(self.payload, startbit, length, cnt, byteorder=byteorder)
+
+                if dataid_name in sig_defs:
+                    ddef = sig_defs[dataid_name]
+                    startbit = getattr(ddef, 'startbit', 0)
+                    length = getattr(ddef, 'length', 4)
+                    byteorder = getattr(ddef, 'sig_byteorder', "Intel")
+                    set_bits(self.payload, startbit, length, dataid_high_nibble, byteorder=byteorder)
+
+                if checksum_name in sig_defs:
                     chkdef = sig_defs[checksum_name]
-                    chkstart = getattr(chkdef, 'sig_start_bit', getattr(chkdef, 'startbit', None))
-                    chklength = getattr(chkdef, 'sig_length', getattr(chkdef, 'length', None))
-                    chkbyteorder = getattr(chkdef, 'sig_byteorder', "Intel")
-                    if chkstart is not None and chklength is not None:
-                        val_to_write = crc & ((1 << chklength) - 1)
-                        set_bits(self.payload, chkstart, chklength, val_to_write, byteorder=chkbyteorder)
+                    startbit = getattr(chkdef, 'startbit', 0)
+                    length = getattr(chkdef, 'length', 8)
+                    byteorder = getattr(chkdef, 'sig_byteorder', "Intel")
+                    set_bits(self.payload, startbit, length, crc_value, byteorder=byteorder)
 
     def send(self):
         self._pack_signals()
