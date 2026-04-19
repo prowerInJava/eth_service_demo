@@ -35,8 +35,61 @@ class EthECUCommunicator:
         for g in getattr(self.frame, 'sig_group_dict', {}):
             self._group_counters[g] = 0
 
-    def set_signal(self, sig_name: str, value: int):
-        self._signal_values[sig_name] = int(value)
+    def set_signal(self, sig_name: str, physical_value: float):
+        """
+        设置信号的物理值（如 23.5 或 100），内部根据 sig_value_factor / sig_value_offset 转为 raw_value 并存储。
+        接受 int 或 float，均视为物理值。
+        """
+        # 查找信号定义
+        sig_def = None
+        for attr in dir(self.frame):
+            if attr.startswith('__'):
+                continue
+            sig_cls = getattr(self.frame, attr)
+            if hasattr(sig_cls, 'sig_name') and sig_cls.sig_name == sig_name:
+                sig_def = sig_cls
+                break
+
+        if sig_def is None:
+            raise KeyError(f"Signal '{sig_name}' not found in frame definition")
+
+        factor = getattr(sig_def, 'sig_value_factor', 1.0)
+        offset = getattr(sig_def, 'sig_value_offset', 0.0)
+        length = getattr(sig_def, 'sig_length', getattr(sig_def, 'length', None))
+
+        if length is None:
+            raise AttributeError(f"Signal '{sig_name}' missing 'sig_length' or 'length'")
+
+        if factor == 0:
+            raise ValueError("sig_value_factor cannot be zero")
+
+        # 统一处理：int 或 float 都是物理值
+        physical_value = float(physical_value)  # 允许传 int，转为 float 计算
+
+        raw_value = (physical_value - offset) / factor
+
+        # 检查是否接近整数
+        if abs(raw_value - round(raw_value)) >= 1e-6:
+            raise ValueError(
+                f"Computed raw_value ({raw_value}) for signal '{sig_name}' is not an integer "
+                f"(factor={factor}, offset={offset}, physical={physical_value})"
+            )
+
+        raw_value = int(round(raw_value))
+        max_val = (1 << length) - 1
+
+        if raw_value < 0 or raw_value > max_val:
+            raise ValueError(
+                f"Raw value {raw_value} for signal '{sig_name}' out of range [0, {max_val}] "
+                f"(physical={physical_value}, factor={factor}, offset={offset})"
+            )
+
+        self._signal_values[sig_name] = raw_value
+
+    def set_raw_signal(self, sig_name: str, raw_value: int):
+        """绕过物理值转换，直接设置原始位域值（用于测试或特殊信号）"""
+        # 可选：校验 raw_value 范围
+        self._signal_values[sig_name] = int(raw_value)
 
     def _pack_signals(self):
         self.payload = bytearray(self.frame.msg_length)

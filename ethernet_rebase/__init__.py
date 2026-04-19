@@ -20,11 +20,11 @@ class UDFrame_Z_204:
         'LVPwrSplyErrSts':["LVPwrSplyErrSts_UB", "LVPwrSplyErrStsChk8", "LVPwrSplyErrStsCntr4", "LVPwrSplyErrStsDataID4", "LVPwrSplyErrStsSts"],
         'VehLVSysUZCL':["VehLVSysUZCL_UB", "VehLVSysUZCLVehLVSysUBkp", "VehLVSysUZCLVehLVSysUMai"]
     }
-    sig_group_dataid_dict = {'CrsCtrlOvrdn':0x8C2,"LVPwrSplyErrSts":0x7A4, "VehLVSysUZCL":None}
+    sig_group_dataid_dict = {'CrsCtrlOvrdn':0x8C2,"LVPwrSplyErrSts":None, "VehLVSysUZCL":None}
 
     e2e_profile_dict = {
         "CrsCtrlOvrdn": "PROFILE_11",
-        "LVPwrSplyErrSts": "PROFILE_11",
+        "LVPwrSplyErrSts": None,
         "VehLVSysUZCL": None
     }
 
