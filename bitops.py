@@ -44,6 +44,8 @@ def set_bits(buf: bytearray, startbit: int, length: int, value: int, byteorder: 
             abs_bit = startbit + bit_index
             byte_index = abs_bit // 8
             bit_in_byte = abs_bit % 8  # 0 = LSB, 7 = MSB
+            if byte_index >= len(buf):
+                raise IndexError("startbit/length 超出缓冲区实际字节范围")
             if src_bit:
                 buf[byte_index] |= (1 << bit_in_byte)
             else:
@@ -59,6 +61,8 @@ def set_bits(buf: bytearray, startbit: int, length: int, value: int, byteorder: 
             if abs_bit < 0:
                 raise IndexError("startbit/length 超出缓冲区范围（计算出的绝对位为负）")
             byte_index = abs_bit // 8
+            if byte_index >= len(buf):
+                raise IndexError("startbit/length 超出缓冲区实际字节范围")
             bit_in_byte = abs_bit % 8  # 0..7, 0 表示字节内的 MSB
             # 在实际字节中，MSB 位对应掩码 1 << 7, LSB 对应 1 << 0
             mask = 1 << (7 - bit_in_byte)
@@ -83,6 +87,8 @@ def get_bits(buf: ByteString, startbit: int, length: int, byteorder: str = "Inte
         for bit_index in range(length):
             abs_bit = startbit + bit_index
             byte_index = abs_bit // 8
+            if byte_index >= len(buf):
+                raise IndexError("startbit/length 超出缓冲区实际字节范围")
             bit_in_byte = abs_bit % 8
             bit = (buf[byte_index] >> bit_in_byte) & 1
             val |= (bit << bit_index)
@@ -94,6 +100,8 @@ def get_bits(buf: ByteString, startbit: int, length: int, byteorder: str = "Inte
             if abs_bit < 0:
                 raise IndexError("startbit/length 超出缓冲区范围（计算出的绝对位为负）")
             byte_index = abs_bit // 8
+            if byte_index >= len(buf):
+                raise IndexError("startbit/length 超出缓冲区实际字节范围")
             bit_in_byte = abs_bit % 8  # 0..7, 0 对应字节 MSB
             mask = 1 << (7 - bit_in_byte)
             bit = 1 if (buf[byte_index] & mask) else 0
@@ -106,7 +114,6 @@ def get_bits(buf: ByteString, startbit: int, length: int, byteorder: str = "Inte
 # 兼容旧接口（直接调用）
 def set_bits_le(buf: bytearray, startbit: int, length: int, value: int) -> None:
     set_bits(buf, startbit, length, value, byteorder="Intel")
-
 
 def get_bits_le(buf: ByteString, startbit: int, length: int) -> int:
     return get_bits(buf, startbit, length, byteorder="Intel")
